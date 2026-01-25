@@ -16,11 +16,15 @@ FEATURE_ENRICHMENT = "experimental_enrichment"
 # Send downstream notifications when a run succeeds
 FEATURE_NOTIFICATIONS = "notify_ops"
 
+# Run new validation logic (e.g., refactored notebook)
+FEATURE_NEW_VALIDATION = "new_validation"
+
 # All supported features, kept in one place for easy reference
 ALL_FEATURES = {
     FEATURE_DATA_QUALITY,
     FEATURE_ENRICHMENT,
     FEATURE_NOTIFICATIONS,
+    FEATURE_NEW_VALIDATION,
 }
 
 

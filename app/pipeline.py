@@ -5,6 +5,13 @@ from __future__ import annotations
 from typing import Iterable, Tuple
 
 from app import features
+from app.notebooks import (
+    base_steps,
+    enrichment,
+    notifications,
+    quality_legacy,
+    quality_new,
+)
 
 
 def _partition_features(
@@ -33,24 +40,29 @@ def run_pipeline(requested_features: Iterable[str]) -> None:
         print(f"Ignoring unknown flags : {sorted(unknown)}")
     print()
 
-    print("Step 1: Ingest base payload")
-    print("Step 2: Transform core dataset")
+    base_steps.ingest()
+    base_steps.transform()
 
-    if features.FEATURE_DATA_QUALITY in enabled:
-        print("Feature[data_quality_checks]: Running validation gate")
+    if features.FEATURE_NEW_VALIDATION in enabled:
+        quality_new.run()
     else:
-        print("Feature[data_quality_checks]: Skipped (flag off)")
+        # keep the existing behavior, optionally still behind the old flag
+        if features.FEATURE_DATA_QUALITY in enabled:
+            quality_legacy.run()
+        else:
+            print("Notebook[quality]: skipped (flag off)")
 
     if features.FEATURE_ENRICHMENT in enabled:
-        print("Feature[experimental_enrichment]: Applying enrichment logic")
+        enrichment.run()
     else:
-        print("Feature[experimental_enrichment]: Skipped (flag off)")
+        print("Notebook[enrichment]: skipped (flag off)")
 
-    print("Step 3: Publish dataset")
+    base_steps.publish()
 
     if features.FEATURE_NOTIFICATIONS in enabled:
-        print("Feature[notify_ops]: Sending run notifications")
+        notifications.run()
     else:
-        print("Feature[notify_ops]: Skipped (flag off)")
+        print("Notebook[notifications]: skipped (flag off)")
+
 
     print("\nRun complete. Same image, different behavior via config.")

@@ -8,17 +8,19 @@ Small, local, Docker-based POC that shows how to run the same code everywhere wh
 - Feature behavior is controlled only by runtime config (`FEATURES` env var).
 - Same code runs in all environments; only feature flags change behavior.
 - Simulated Databricks mapping:
-- `app/run.py` ~ notebook entrypoint triggered by a Job.
-- Env vars/`.env` files ~ Job parameters/Widgets.
-- `app/pipeline.py` ~ notebook logic.
+  - `app/run.py` ~ notebook entrypoint triggered by a Job.
+  - Env vars/`.env` files ~ Job parameters/Widgets.
+  - `app/pipeline.py` ~ notebook orchestration.
+  - `app/notebooks/*` ~ individual notebooks callable by flags.
 
 ## Repo layout (must match POC)
 ```
 feature-toggle-poc/
 |-- app/
 |   |-- features.py        # feature identifiers
-|   |-- pipeline.py        # core logic with feature checks
-|   `-- run.py             # entrypoint (simulates Databricks Job)
+|   |-- pipeline.py        # orchestrates notebooks by feature flag
+|   |-- run.py             # entrypoint (simulates Databricks Job)
+|   `-- notebooks/         # notebook-like modules
 |-- config/
 |   |-- dev.env
 |   |-- qa.env
@@ -36,13 +38,14 @@ feature-toggle-poc/
 
 Current features:
 - `data_quality_checks` - extra validation gate.
+- `new_validation` - refactored validation notebook.
 - `experimental_enrichment` - optional enrichment step.
 - `notify_ops` - send notifications after publish.
 
 ## Environment behavior
-- dev: all features enabled (`data_quality_checks,experimental_enrichment,notify_ops`).
-- qa: subset enabled (`data_quality_checks,experimental_enrichment`).
-- prod: production-approved only (`data_quality_checks,notify_ops`).
+- dev: all features enabled (`data_quality_checks,experimental_enrichment,notify_ops,new_validation`).
+- qa: subset enabled (`data_quality_checks,experimental_enrichment,new_validation`).
+- prod: production-approved only (`data_quality_checks,notify_ops`) - stays on legacy validation.
 
 The same Docker image runs in every environment; only `FEATURES` differs.
 
