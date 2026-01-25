@@ -4,15 +4,15 @@ services:
   dev:
     build: .
     image: feature-toggle-poc:latest
-    env_file:
-      - config/dev.env
+    environment:
+      CONFIG_FILE: /app/config/dev.yaml
 
   qa:
     image: feature-toggle-poc:latest
-    env_file:
-      - config/qa.env
+    environment:
+      CONFIG_FILE: /app/config/qa.yaml
 
   prod:
     image: feature-toggle-poc:latest
-    env_file:
-      - config/prod.env
+    environment:
+      CONFIG_FILE: /app/config/prod.yaml

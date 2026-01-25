@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-import json
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List, Tuple
 
-DEFAULT_FEATURE_CONFIG = Path(__file__).resolve().parents[1] / "config" / "features.json"
+import yaml
+
+DEFAULT_FEATURE_CONFIG = Path(__file__).resolve().parents[1] / "config" / "features.yaml"
 FEATURE_CONFIG_ENV = "FEATURE_CONFIG_FILE"
 
 
@@ -24,7 +25,7 @@ class FeatureConfigEntry:
 
 def load_feature_config() -> Tuple[List[FeatureConfigEntry], List[str]]:
     """
-    Load feature registry entries from a JSON config file.
+    Load feature registry entries from a YAML config file.
     Returns (entries, logs).
     """
     path = Path(os.getenv(FEATURE_CONFIG_ENV, DEFAULT_FEATURE_CONFIG))
@@ -36,9 +37,9 @@ def load_feature_config() -> Tuple[List[FeatureConfigEntry], List[str]]:
 
     try:
         with path.open() as fh:
-            raw = json.load(fh)
+            raw = yaml.safe_load(fh) or {}
         logs.append(f"Registry: loaded {path}")
-    except json.JSONDecodeError:
+    except Exception:
         logs.append(f"Registry: could not parse {path}; using built-in defaults")
         return [], logs
 

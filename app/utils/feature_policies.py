@@ -7,15 +7,14 @@ so the pipeline auto-adjusts without editing pipeline.py.
 
 from __future__ import annotations
 
-import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Set, Tuple
 
-from app import features
+import yaml
 
-DEFAULT_POLICY_FILE = Path(__file__).resolve().parents[2] / "config" / "policies.json"
+DEFAULT_POLICY_FILE = Path(__file__).resolve().parents[2] / "config" / "policies.yaml"
 POLICY_FILE_ENV = "POLICY_FILE"
 
 
@@ -61,8 +60,8 @@ def _load_policies() -> PolicyConfig:
 
     try:
         with path.open() as fh:
-            raw = json.load(fh)
-    except json.JSONDecodeError:
+            raw = yaml.safe_load(fh) or {}
+    except Exception:
         return PolicyConfig(baseline=set(), retired=set(), logs=[f"Policy: could not parse {path}; no lifecycle adjustments applied"])
 
     baseline = set(raw.get("baseline_features", []))

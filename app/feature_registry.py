@@ -7,7 +7,7 @@ from importlib import import_module
 from typing import Callable, List, Set
 
 from app import config_loader, features
-from app.notebooks import notifications, quality_legacy, quality_new
+from app.notebooks import enrichment, notifications, quality_legacy, quality_new
 
 
 @dataclass(frozen=True)
@@ -36,7 +36,7 @@ _BUILT_IN_REGISTRY: List[FeatureEntry] = [
     ),
     FeatureEntry(
         feature=features.FEATURE_ENRICHMENT,
-        handler=lambda: None,  # placeholder; config will supply real handler
+        handler=enrichment.run,
         label="Notebook[enrichment]",
         stage="pre",
     ),
