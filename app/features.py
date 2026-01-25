@@ -10,7 +10,7 @@ from typing import Optional
 # Run enhanced validation steps (e.g., schema and freshness checks)
 FEATURE_DATA_QUALITY = "data_quality_checks"
 
-# Enrich the dataset with an experimental scoring routine
+# Enrich the dataset with an experimental scoring routine (now baseline)
 FEATURE_ENRICHMENT = "experimental_enrichment"
 
 # Send downstream notifications when a run succeeds

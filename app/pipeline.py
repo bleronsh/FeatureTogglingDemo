@@ -4,14 +4,9 @@ from __future__ import annotations
 
 from typing import Iterable, Tuple
 
-from app import features
-from app.notebooks import (
-    base_steps,
-    enrichment,
-    notifications,
-    quality_legacy,
-    quality_new,
-)
+from app import feature_registry, features
+from app.notebooks import base_steps
+from app.utils import feature_policies
 
 
 def _partition_features(
@@ -30,7 +25,12 @@ def run_pipeline(requested_features: Iterable[str]) -> None:
     Simulate a Databricks-style job that toggles behavior purely via
     runtime feature flags (no code changes, no branch switching).
     """
-    enabled, unknown, disabled = _partition_features(requested_features)
+    requested_set = set(requested_features)
+    enabled, policy_logs = feature_policies.apply_policies(requested_set)
+    for log in policy_logs:
+        print(log)
+
+    enabled, unknown, disabled = _partition_features(enabled)
 
     print("=== Pipeline bootstrap ===")
     print(f"All supported features : {sorted(features.ALL_FEATURES)}")
@@ -43,26 +43,31 @@ def run_pipeline(requested_features: Iterable[str]) -> None:
     base_steps.ingest()
     base_steps.transform()
 
-    if features.FEATURE_NEW_VALIDATION in enabled:
-        quality_new.run()
-    else:
-        # keep the existing behavior, optionally still behind the old flag
-        if features.FEATURE_DATA_QUALITY in enabled:
-            quality_legacy.run()
-        else:
-            print("Notebook[quality]: skipped (flag off)")
+    suppressed: set[str] = set()
+    pre_entries = [e for e in feature_registry.FEATURE_REGISTRY if e.stage == "pre"]
+    post_entries = [e for e in feature_registry.FEATURE_REGISTRY if e.stage == "post"]
 
-    if features.FEATURE_ENRICHMENT in enabled:
-        enrichment.run()
-    else:
-        print("Notebook[enrichment]: skipped (flag off)")
-
+    _execute_entries(pre_entries, enabled, suppressed)
     base_steps.publish()
 
-    if features.FEATURE_NOTIFICATIONS in enabled:
-        notifications.run()
-    else:
-        print("Notebook[notifications]: skipped (flag off)")
-
+    _execute_entries(post_entries, enabled, suppressed)
 
     print("\nRun complete. Same image, different behavior via config.")
+
+
+def _execute_entries(
+    entries: list[feature_registry.FeatureEntry],
+    enabled: set[str],
+    suppressed: set[str],
+) -> None:
+    """Run or skip feature entries based on runtime flags and overrides."""
+    for entry in entries:
+        if entry.feature in suppressed:
+            print(f"{entry.label}: skipped (overridden)")
+            continue
+
+        if entry.feature in enabled:
+            entry.handler()
+            suppressed.update(entry.overrides)
+        else:
+            print(f"{entry.label}: skipped (flag off)")

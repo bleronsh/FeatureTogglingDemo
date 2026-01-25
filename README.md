@@ -38,14 +38,22 @@ feature-toggle-poc/
 
 Current features:
 - `data_quality_checks` - extra validation gate.
+- `experimental_enrichment` - enrichment notebook (baseline via policy).
 - `new_validation` - refactored validation notebook.
-- `experimental_enrichment` - optional enrichment step.
 - `notify_ops` - send notifications after publish.
 
+Lifecycle helper:
+- `app/utils/feature_policies.py` + `config/policies.json` let you auto-baseline or retire flags without touching `pipeline.py`; invoked on every run and logs what it does.
+
 ## Environment behavior
-- dev: all features enabled (`data_quality_checks,experimental_enrichment,notify_ops,new_validation`).
-- qa: subset enabled (`data_quality_checks,experimental_enrichment,new_validation`).
+- dev: validation flags plus notifications (`data_quality_checks,notify_ops,new_validation`).
+- qa: validation only (`data_quality_checks`) - stays on legacy validation until promoted.
 - prod: production-approved only (`data_quality_checks,notify_ops`) - stays on legacy validation.
+
+Promotion demo (toggle-only, no code edits):
+- Dev already runs the new validation via `new_validation`.
+- To promote to QA, add `new_validation` to `FEATURES` in `config/qa.env`.
+- To promote to Prod, add `new_validation` to `FEATURES` in `config/prod.env`.
 
 The same Docker image runs in every environment; only `FEATURES` differs.
 
