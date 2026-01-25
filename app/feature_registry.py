@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from importlib import import_module
 from typing import Callable, List, Set
 
-from app import features
-from app.notebooks import enrichment, notifications, quality_legacy, quality_new
+from app import config_loader, features
+from app.notebooks import notifications, quality_legacy, quality_new
 
 
 @dataclass(frozen=True)
@@ -19,7 +20,7 @@ class FeatureEntry:
 
 
 # Ordered list controls execution sequence (priority goes top-to-bottom).
-FEATURE_REGISTRY: List[FeatureEntry] = [
+_BUILT_IN_REGISTRY: List[FeatureEntry] = [
     FeatureEntry(
         feature=features.FEATURE_NEW_VALIDATION,
         handler=quality_new.run,
@@ -35,7 +36,7 @@ FEATURE_REGISTRY: List[FeatureEntry] = [
     ),
     FeatureEntry(
         feature=features.FEATURE_ENRICHMENT,
-        handler=enrichment.run,
+        handler=lambda: None,  # placeholder; config will supply real handler
         label="Notebook[enrichment]",
         stage="pre",
     ),
@@ -46,3 +47,39 @@ FEATURE_REGISTRY: List[FeatureEntry] = [
         stage="post",
     ),
 ]
+
+
+def _load_registry_from_config() -> tuple[list[FeatureEntry], list[str]]:
+    config_entries, logs = config_loader.load_feature_config()
+    registry: list[FeatureEntry] = []
+
+    for entry in config_entries:
+        try:
+            module = import_module(entry.module)
+        except ModuleNotFoundError:
+            logs.append(f"Registry: could not import module '{entry.module}' for feature '{entry.feature_id}'")
+            continue
+
+        handler = getattr(module, entry.callable_name, None)
+        if handler is None:
+            logs.append(f"Registry: module '{entry.module}' missing callable '{entry.callable_name}' for feature '{entry.feature_id}'")
+            continue
+
+        registry.append(
+            FeatureEntry(
+                feature=entry.feature_id,
+                handler=handler,
+                label=entry.label,
+                overrides=set(entry.overrides),
+                stage=entry.stage,
+            )
+        )
+
+    if not registry:
+        logs.append("Registry: using built-in registry (no valid config entries)")
+        registry = list(_BUILT_IN_REGISTRY)
+
+    return registry, logs
+
+
+FEATURE_REGISTRY, REGISTRY_LOGS = _load_registry_from_config()

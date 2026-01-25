@@ -29,6 +29,8 @@ def run_pipeline(requested_features: Iterable[str]) -> None:
     enabled, policy_logs = feature_policies.apply_policies(requested_set)
     for log in policy_logs:
         print(log)
+    for log in feature_registry.REGISTRY_LOGS:
+        print(log)
 
     enabled, unknown, disabled = _partition_features(enabled)
 

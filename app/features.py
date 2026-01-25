@@ -7,6 +7,8 @@ agree on the same names, and they are not tied to branches or tags.
 
 from typing import Optional
 
+from app import config_loader
+
 # Run enhanced validation steps (e.g., schema and freshness checks)
 FEATURE_DATA_QUALITY = "data_quality_checks"
 
@@ -26,6 +28,15 @@ ALL_FEATURES = {
     FEATURE_NOTIFICATIONS,
     FEATURE_NEW_VALIDATION,
 }
+
+
+def _load_dynamic_feature_ids() -> set[str]:
+    """Load feature ids from config to avoid code edits for new notebooks."""
+    entries, _ = config_loader.load_feature_config()
+    return {entry.feature_id for entry in entries}
+
+
+ALL_FEATURES |= _load_dynamic_feature_ids()
 
 
 def parse_feature_flags(raw: Optional[str]) -> set[str]:

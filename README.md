@@ -44,6 +44,22 @@ Current features:
 
 Lifecycle helper:
 - `app/utils/feature_policies.py` + `config/policies.json` let you auto-baseline or retire flags without touching `pipeline.py`; invoked on every run and logs what it does.
+- `config/features.json` maps feature IDs to notebook modules/handlers; edit this file (not code) to register new notebooks. Pipeline auto-loads it and logs the source.
+
+## Add a new notebook-driven feature (no code edits)
+1) Create a notebook module under `app/notebooks/` with a callable (default `run`).
+2) Add an entry to `config/features.json`, e.g.:
+   ```json
+   {
+     "id": "my_new_feature",
+     "module": "app.notebooks.my_new_feature",
+     "callable": "run",
+     "label": "Notebook[my_new_feature]",
+     "stage": "pre",
+     "overrides": []
+   }
+   ```
+3) Turn it on per environment by adding `my_new_feature` to the `FEATURES` env var (e.g., `config/dev.env`), or baseline it via `config/policies.json` if you want it always on.
 
 ## Environment behavior
 - dev: validation flags plus notifications (`data_quality_checks,notify_ops,new_validation`).

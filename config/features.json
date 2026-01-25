@@ -1,0 +1,52 @@
+{
+  "features": [
+    {
+      "id": "new_validation",
+      "module": "app.notebooks.quality_new",
+      "callable": "run",
+      "label": "Notebook[new_validation]",
+      "stage": "pre",
+      "overrides": ["data_quality_checks"]
+    },
+    {
+      "id": "data_quality_checks",
+      "module": "app.notebooks.quality_legacy",
+      "callable": "run",
+      "label": "Notebook[quality_legacy]",
+      "stage": "pre",
+      "overrides": []
+    },
+    {
+      "id": "experimental_enrichment",
+      "module": "app.notebooks.enrichment",
+      "callable": "run",
+      "label": "Notebook[enrichment]",
+      "stage": "pre",
+      "overrides": []
+    },
+    {
+      "id": "my_newer_feature",
+      "module": "app.notebooks.my_newer_feature",
+      "callable": "run",
+      "label": "Notebook[my_newer_feature]",
+      "stage": "pre",
+      "overrides": ["my_new_feature"]
+    },
+    {
+      "id": "notify_ops",
+      "module": "app.notebooks.notifications",
+      "callable": "run",
+      "label": "Notebook[notifications]",
+      "stage": "post",
+      "overrides": []
+    },
+    {
+      "id": "my_new_feature",
+      "module": "app.notebooks.my_new_feature",
+      "callable": "run",
+      "label": "Notebook[my_new_feature]",
+      "stage": "pre",
+      "overrides": []
+    }
+  ]
+}
